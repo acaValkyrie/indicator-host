@@ -29,10 +29,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         let dirs = list_dir("/dev/");
         
         let mut peripherals = BTreeMap::new();
-        peripherals.insert("ttyACM0", false);
-        peripherals.insert("ttyACM1", false);
-        peripherals.insert("input/js0", false);
         peripherals.insert("uart_pico", false);
+        peripherals.insert("ydlidar", false);
         for peripheral in peripherals.iter_mut(){
             let (key, value) = peripheral;
             let key_name = key.to_string();
