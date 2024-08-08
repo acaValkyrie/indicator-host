@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         
                 // ディレクトリ一覧を取得
-        let input_dirs = list_dir("/dev/");
+        let input_dirs = list_dir("/dev/input");
         
         let mut inputs = BTreeMap::new();
         inputs.insert("js0", false);
@@ -51,7 +51,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             *value = input_dirs.contains(&key_name);
         }
         print!("{:?}", peripherals);
+        println!("{:?}", inputs);
         
+        // 送信用コマンド作成
         let mut send_command = String::new();
         for peripheral in peripherals.iter(){
             let (key, value) = peripheral;
@@ -69,13 +71,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                 send_command.push_str("0");
             }
         }
-        send_command.push_str("\r\n");
+        send_command.push_str("\n");
 
         // シリアルで送信
         match port.write(send_command.as_bytes()){
             Ok(_) => std::io::stdout().flush()?,
             Err(ref e) if e.kind() == std::io::ErrorKind::TimedOut => (),
-            Err(e) => eprintln!("{:?}", e),
+            Err(e) => {eprintln!("{:?}", e); return Err(e.into());},
         }
 
         // sleep 1 sec
