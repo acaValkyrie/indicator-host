@@ -19,7 +19,7 @@ fn list_dir(_path:&str) -> Vec<String> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut port = serialport::new("/dev/ttyACM0", 9600)
+    let mut port = serialport::new("/dev/indicator", 9600)
         .stop_bits(serialport::StopBits::One)
         .data_bits(serialport::DataBits::Eight)
         .parity(serialport::Parity::None)
