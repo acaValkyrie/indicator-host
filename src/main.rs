@@ -1,10 +1,12 @@
 use std::{
-    fs::{self, DirEntry}, path::PathBuf
+    fs::{self, DirEntry}, os::{linux::raw::stat, unix::process::ExitStatusExt}, path::PathBuf, sync::mpsc::RecvTimeoutError
 };
 use std::error::Error;
 use std::io::prelude::*;
 use std::time::Duration;
 use std::collections::BTreeMap;
+use std::net::{IpAddr, Ipv4Addr};
+use std::process::Command;
 
 fn list_dir(_path:&str) -> Vec<String> {
     let dir = PathBuf::from(_path);
@@ -17,7 +19,7 @@ fn list_dir(_path:&str) -> Vec<String> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut port = serialport::new("/dev/indicator", 9600)
+    let mut port = serialport::new("/dev/ttyACM0", 9600)
         .stop_bits(serialport::StopBits::One)
         .data_bits(serialport::DataBits::Eight)
         .parity(serialport::Parity::None)
@@ -27,19 +29,21 @@ fn main() -> Result<(), Box<dyn Error>> {
     loop {
         // ディレクトリ一覧を取得
         let dirs = list_dir("/dev/");
-        
         let mut peripherals = BTreeMap::new();
         peripherals.insert("uart_pico", false);
-        peripherals.insert("ydlidar", false);
         for peripheral in peripherals.iter_mut(){
             let (key, value) = peripheral;
             let key_name = key.to_string();
             *value = dirs.contains(&key_name);
         }
         
-                // ディレクトリ一覧を取得
-        let input_dirs = list_dir("/dev/input");
+        let status = Command::new("sh").arg("-c")
+                        .arg("ping 192.168.1.169 -c 1").status().unwrap();
+        let exist_lidar = status.success();
+        peripherals.insert("lidar", exist_lidar);
         
+        // ディレクトリ一覧を取得
+        let input_dirs = list_dir("/dev/input");
         let mut inputs = BTreeMap::new();
         inputs.insert("js0", false);
         // peripherals.insert("ydlidar", false);
@@ -48,8 +52,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             let key_name = key.to_string();
             *value = input_dirs.contains(&key_name);
         }
-        print!("{:?}", peripherals);
-        println!("{:?}", inputs);
+        // print!("{:?}", peripherals);
+        // println!("{:?}", inputs);
         
         // 送信用コマンド作成
         let mut send_command = String::new();
@@ -79,7 +83,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
 
         // sleep 1 sec
-        std::thread::sleep(Duration::from_secs(1));
+        // std::thread::sleep(Duration::from_secs(1));
     }
 }
 
