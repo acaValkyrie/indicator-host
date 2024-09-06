@@ -83,7 +83,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
 
         // sleep 1 sec
-        // std::thread::sleep(Duration::from_secs(1));
+        std::thread::sleep(Duration::from_secs(1));
     }
 }
 
